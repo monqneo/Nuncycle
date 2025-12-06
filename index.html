@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>NUNCYCLE - Liquid Web3</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Orbitron:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --neon-green: #10b981;
+        --neon-blue: #06b6d4;
+        --neon-purple: #8b5cf6;
+      }
+      body {
+        font-family: 'Nunito', sans-serif;
+        background-color: #020617; /* Slate 950 */
+        color: #e2e8f0;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        overflow: hidden; /* Prevent body scroll, handle in app */
+      }
+      h1, h2, h3, .font-tech {
+        font-family: 'Orbitron', sans-serif;
+      }
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      /* LIQUID GLASS STYLES */
+      .liquid-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+        border-left: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 
+          0 4px 24px -1px rgba(0, 0, 0, 0.2),
+          inset 0 0 20px rgba(255, 255, 255, 0.02);
+        position: relative;
+        overflow: hidden;
+      }
+      
+      /* Glossy shine on top of cards */
+      .liquid-card::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 40%;
+        background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+        pointer-events: none;
+        border-radius: 24px 24px 0 0;
+      }
+
+      .liquid-button {
+        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.01) 100%);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-top: 1px solid rgba(255,255,255,0.3);
+        box-shadow: 
+          0 4px 15px rgba(0,0,0,0.3), 
+          inset 0 2px 10px rgba(255,255,255,0.1);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .liquid-button:active {
+        transform: scale(0.96);
+        box-shadow: inset 0 5px 20px rgba(0,0,0,0.4);
+      }
+
+      /* ORGANIC ANIMATIONS */
+      @keyframes morph {
+        0% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+        50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+        100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+      }
+      .animate-morph {
+        animation: morph 8s ease-in-out infinite;
+      }
+
+      @keyframes float-organic {
+        0% { transform: translate(0, 0) rotate(0deg); }
+        33% { transform: translate(10px, -15px) rotate(2deg); }
+        66% { transform: translate(-5px, 10px) rotate(-2deg); }
+        100% { transform: translate(0, 0) rotate(0deg); }
+      }
+      .animate-float-organic {
+        animation: float-organic 12s ease-in-out infinite;
+      }
+      
+      .blob {
+        position: absolute;
+        filter: blur(40px);
+        opacity: 0.6;
+        z-index: 0;
+      }
+
+      /* Custom scrollbar */
+      .custom-scroll::-webkit-scrollbar {
+        width: 4px;
+      }
+      .custom-scroll::-webkit-scrollbar-track {
+        background: rgba(0,0,0,0);
+      }
+      .custom-scroll::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "react-dom/client": "https://aistudiocdn.com/react-dom@^19.2.1/client",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.556.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
