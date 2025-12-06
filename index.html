@@ -19,7 +19,8 @@
         color: #e2e8f0;
         user-select: none;
         -webkit-tap-highlight-color: transparent;
-        overflow: hidden; 
+        overflow-x: hidden; /* Prevent horizontal scroll only */
+        overflow-y: auto;   /* Allow vertical scroll */
       }
       h1, h2, h3, .font-tech {
         font-family: 'Orbitron', sans-serif;
@@ -126,6 +127,15 @@
       }
       .animate-tree-pop {
         animation: tree-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+
+      @keyframes selected-glow {
+        0% { filter: drop-shadow(0 0 5px rgba(16, 185, 129, 0.5)); transform: scale(1); }
+        50% { filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.9)); transform: scale(1.1); }
+        100% { filter: drop-shadow(0 0 5px rgba(16, 185, 129, 0.5)); transform: scale(1); }
+      }
+      .animate-selected-glow {
+        animation: selected-glow 2s infinite ease-in-out;
       }
 
       /* Custom Scroll */

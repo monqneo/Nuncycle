@@ -56,7 +56,13 @@ import {
   Handshake,
   Car,
   Plane,
-  ThermometerSun
+  ThermometerSun,
+  ShoppingBag,
+  MapPin,
+  Info,
+  Clock,
+  Camera as CameraIcon,
+  Scissors as ScissorsIcon
 } from 'lucide-react';
 
 // --- TYPES & CONSTANTS ---
@@ -156,32 +162,52 @@ interface DailyTask {
   completed: boolean;
 }
 
+interface RealTreeSpecies {
+  id: string;
+  name: string;
+  cost: number;
+  co2: number;
+  image: string;
+  region: string;
+  desc: string;
+  bg: string;
+}
+
+interface MyRealTreeInstance {
+  id: string;
+  speciesId: string;
+  customName: string;
+  purchaseDate: string;
+  gps: string;
+  history: { date: string; title: string; desc: string; icon: any }[];
+}
+
 const LEVEL_XP_THRESHOLD = 200;
 const MAX_ENERGY = 9999; // Unlimited for test user
 
-const TREE_STATS: Record<TreeType, { name: string; income: number; cost: number; rarity: string; color: string; icon: any; desc?: string }> = {
+const TREE_STATS: Record<TreeType, { name: string; income: number; cost: number; rarity: string; color: string; icon: any; desc: string }> = {
   // Starters
-  basic: { name: 'Эко-Дуб', income: 8, cost: 50, rarity: 'Обычное', color: 'text-green-400', icon: TreeDeciduous, desc: 'Классическое дерево для старта.' },
-  protective: { name: 'Щит-Ива', income: 6, cost: 80, rarity: 'Необычное', color: 'text-cyan-400', icon: TreePine, desc: 'Защищает соседние деревья.' },
-  synergetic: { name: 'Нейро-Цвет', income: 12, cost: 120, rarity: 'Редкое', color: 'text-purple-400', icon: Flower2, desc: 'Усиливает добычу токенов.' },
+  basic: { name: 'Эко-Дуб', income: 8, cost: 50, rarity: 'Обычное', color: 'text-green-400', icon: TreeDeciduous, desc: 'Базовое дерево. Стабильный доход токенов.' },
+  protective: { name: 'Щит-Ива', income: 6, cost: 80, rarity: 'Необычное', color: 'text-cyan-400', icon: TreePine, desc: 'Увеличивает защиту соседних участков.' },
+  synergetic: { name: 'Нейро-Цвет', income: 12, cost: 120, rarity: 'Редкое', color: 'text-purple-400', icon: Flower2, desc: 'Синергия с другими деревьями, бонус к XP.' },
   
   // Advanced Virtual Trees
-  neon_cactus: { name: 'Неон-Кактус', income: 14, cost: 160, rarity: 'Редкое', color: 'text-pink-400', icon: TreePine, desc: 'Светится ночью, требует мало воды.' },
-  crystal_spruce: { name: 'Кристальная Ель', income: 18, cost: 220, rarity: 'Эпик', color: 'text-blue-300', icon: TreePine, desc: 'Кристаллы резонируют с блокчейном.' },
-  magma_pine: { name: 'Магма-Пальма', income: 22, cost: 300, rarity: 'Эпик', color: 'text-orange-500', icon: TreePalm, desc: 'Генерирует тепло и энергию.' },
-  cyber_bonsai: { name: 'Кибер-Бонсай', income: 25, cost: 400, rarity: 'Легендарное', color: 'text-emerald-300', icon: Sprout, desc: 'Идеальный баланс кода и природы.' },
-  void_willow: { name: 'Ива Пустоты', income: 30, cost: 550, rarity: 'Мифическое', color: 'text-indigo-400', icon: TreeDeciduous, desc: 'Поглощает энтропию.' },
-  quantum_maple: { name: 'Квантовый Клен', income: 40, cost: 800, rarity: 'Мифическое', color: 'text-violet-400', icon: TreeDeciduous, desc: 'Существует в двух состояниях.' },
+  neon_cactus: { name: 'Неон-Кактус', income: 14, cost: 160, rarity: 'Редкое', color: 'text-pink-400', icon: TreePine, desc: 'Накапливает энергию днем, светится ночью.' },
+  crystal_spruce: { name: 'Кристальная Ель', income: 18, cost: 220, rarity: 'Эпик', color: 'text-blue-300', icon: TreePine, desc: 'Генерирует токены через резонанс блокчейна.' },
+  magma_pine: { name: 'Магма-Пальма', income: 22, cost: 300, rarity: 'Эпик', color: 'text-orange-500', icon: TreePalm, desc: 'Редкий вид, растущий на вулканической почве.' },
+  cyber_bonsai: { name: 'Кибер-Бонсай', income: 25, cost: 400, rarity: 'Легендарное', color: 'text-emerald-300', icon: Sprout, desc: 'Идеальный баланс цифрового кода и природы.' },
+  void_willow: { name: 'Ива Пустоты', income: 30, cost: 550, rarity: 'Мифическое', color: 'text-indigo-400', icon: TreeDeciduous, desc: 'Поглощает цифровой шум, превращая в токены.' },
+  quantum_maple: { name: 'Квантовый Клен', income: 40, cost: 800, rarity: 'Мифическое', color: 'text-violet-400', icon: TreeDeciduous, desc: 'Существует одновременно в двух состояниях.' },
 
   // Branded Trees
-  brand_adidas: { name: 'Adidas Bio-Mesh', income: 15, cost: 200, rarity: 'Бренд', color: 'text-blue-300', icon: TreePalm },
-  brand_google: { name: 'Google Quantum Root', income: 18, cost: 250, rarity: 'Бренд', color: 'text-orange-300', icon: TreeDeciduous },
-  brand_patagonia: { name: 'Patagonia Wild', income: 14, cost: 180, rarity: 'Бренд', color: 'text-teal-300', icon: TreePine },
-  brand_yandex: { name: 'Yandex Neuro-Birch', income: 16, cost: 220, rarity: 'Бренд', color: 'text-red-400', icon: TreeDeciduous },
-  brand_kaspi: { name: 'Kaspi Gold Tree', income: 20, cost: 300, rarity: 'Бренд', color: 'text-yellow-500', icon: TreePalm },
-  brand_amazon: { name: 'Amazon Prime Palm', income: 17, cost: 240, rarity: 'Бренд', color: 'text-yellow-400', icon: TreePalm },
-  brand_meta: { name: 'Metaverse Willow', income: 19, cost: 260, rarity: 'Бренд', color: 'text-blue-500', icon: TreePine },
-  brand_samsung: { name: 'Samsung Galaxy Sprout', income: 18, cost: 250, rarity: 'Бренд', color: 'text-indigo-400', icon: Flower2 },
+  brand_adidas: { name: 'Adidas Bio-Mesh', income: 15, cost: 200, rarity: 'Бренд', color: 'text-blue-300', icon: TreePalm, desc: 'Лимитированная серия от Adidas Earth Fund.' },
+  brand_google: { name: 'Google Quantum Root', income: 18, cost: 250, rarity: 'Бренд', color: 'text-orange-300', icon: TreeDeciduous, desc: 'Оптимизирует рост через ML алгоритмы.' },
+  brand_patagonia: { name: 'Patagonia Wild', income: 14, cost: 180, rarity: 'Бренд', color: 'text-teal-300', icon: TreePine, desc: 'Символ дикой природы.' },
+  brand_yandex: { name: 'Yandex Neuro-Birch', income: 16, cost: 220, rarity: 'Бренд', color: 'text-red-400', icon: TreeDeciduous, desc: 'Локализованный вид, устойчив к холоду.' },
+  brand_kaspi: { name: 'Kaspi Gold Tree', income: 20, cost: 300, rarity: 'Бренд', color: 'text-yellow-500', icon: TreePalm, desc: 'Приносит золотые плоды.' },
+  brand_amazon: { name: 'Amazon Prime Palm', income: 17, cost: 240, rarity: 'Бренд', color: 'text-yellow-400', icon: TreePalm, desc: 'Быстрый рост и доставка кислорода.' },
+  brand_meta: { name: 'Metaverse Willow', income: 19, cost: 260, rarity: 'Бренд', color: 'text-blue-500', icon: TreePine, desc: 'Дерево из виртуальной реальности.' },
+  brand_samsung: { name: 'Samsung Galaxy Sprout', income: 18, cost: 250, rarity: 'Бренд', color: 'text-indigo-400', icon: Flower2, desc: 'Технологичное цветение.' },
 };
 
 const PARTNERS: Partner[] = [
@@ -282,29 +308,58 @@ const PARTNERS: Partner[] = [
   }
 ];
 
-const REAL_TREES = [
-  { id: 1, name: 'Сосна Обыкновенная', cost: 500, co2: 250, image: '🌲', req: 'Нет требований', bg: 'bg-emerald-900/50', isSponsored: false },
-  { id: 2, name: 'Береза Повислая', cost: 600, co2: 300, image: '🌳', req: 'Ур. 2', bg: 'bg-lime-900/50', isSponsored: false },
-  { id: 3, name: 'Ель Европейская', cost: 700, co2: 350, image: '🌲', req: 'Ур. 3', bg: 'bg-emerald-800/50', isSponsored: false },
-  { id: 4, name: 'Клен Остролистный', cost: 800, co2: 400, image: '🍁', req: 'Ур. 4', bg: 'bg-orange-900/50', isSponsored: false },
-  { id: 5, name: 'Липа Сердцевидная', cost: 900, co2: 420, image: '🍃', req: 'Ур. 4', bg: 'bg-yellow-900/50', isSponsored: false },
-  { id: 6, name: 'Яблоня Лесная', cost: 1000, co2: 380, image: '🍎', req: 'Ур. 5', bg: 'bg-red-900/40', isSponsored: false },
-  { id: 7, name: 'Груша Дикая', cost: 1100, co2: 390, image: '🍐', req: 'Ур. 5', bg: 'bg-lime-800/40', isSponsored: false },
-  { id: 8, name: 'Рябина', cost: 1200, co2: 410, image: '🍒', req: 'Ур. 6', bg: 'bg-orange-800/40', isSponsored: false },
-  { id: 9, name: 'Дуб Черешчатый', cost: 1400, co2: 500, image: '🌳', req: 'Ур. 7, 3 Узла', bg: 'bg-amber-900/50', isSponsored: false },
-  { id: 10, name: 'Кедр Сибирский', cost: 1600, co2: 550, image: '🌲', req: 'Ур. 8', bg: 'bg-emerald-950/50', isSponsored: false },
-  { id: 11, name: 'Лиственница', cost: 1800, co2: 580, image: '🌲', req: 'Ур. 9', bg: 'bg-yellow-800/40', isSponsored: false },
-  { id: 12, name: 'Ясень', cost: 2000, co2: 600, image: '🌿', req: 'Ур. 10', bg: 'bg-green-900/40', isSponsored: false },
-  { id: 13, name: 'Бук Лесной', cost: 2200, co2: 650, image: '🌳', req: 'Ур. 11', bg: 'bg-stone-800/50', isSponsored: false },
-  { id: 14, name: 'Вяз Гладкий', cost: 2500, co2: 700, image: '🌳', req: 'Ур. 12', bg: 'bg-stone-900/50', isSponsored: false },
-  { id: 15, name: 'Пихта', cost: 2800, co2: 750, image: '🌲', req: 'Ур. 13', bg: 'bg-emerald-900/60', isSponsored: false },
-  { id: 16, name: 'Каштан', cost: 3000, co2: 800, image: '🌰', req: 'Ур. 14', bg: 'bg-amber-950/50', isSponsored: false },
-  { id: 17, name: 'Орех Грецкий', cost: 3500, co2: 850, image: '🥜', req: 'Ур. 15', bg: 'bg-stone-800/60', isSponsored: false },
-  { id: 18, name: 'Мангровое Дерево', cost: 4000, co2: 1200, image: '🌊', req: 'Ур. 16, Спонсор', bg: 'bg-blue-900/50', isSponsored: true },
-  { id: 19, name: 'Секвойя', cost: 5000, co2: 2000, image: '🌲', req: 'Ур. 18', bg: 'bg-red-950/60', isSponsored: false },
-  { id: 20, name: 'Баобаб', cost: 7000, co2: 2500, image: '🌳', req: 'Ур. 20', bg: 'bg-yellow-950/60', isSponsored: false },
-  { id: 21, name: 'Adidas Ocean Mangrove', cost: 4500, co2: 1300, image: '👟', req: 'Adidas Quest', bg: 'bg-blue-900/80', isSponsored: true },
-  { id: 22, name: 'Google Carbon Oak', cost: 6000, co2: 1800, image: '🌐', req: 'Google Quest', bg: 'bg-green-900/80', isSponsored: true }
+// REAL WORLD TREES - Requested 5 Species
+const REAL_TREES_SPECIES: RealTreeSpecies[] = [
+  { 
+    id: 'poplar', 
+    name: 'Тополь', 
+    cost: 500, 
+    co2: 150, 
+    image: '🌳', 
+    region: 'Городские парки, СНГ', 
+    desc: 'Быстрорастущее дерево, отличный фильтр воздуха.', 
+    bg: 'bg-emerald-900/50' 
+  },
+  { 
+    id: 'birch', 
+    name: 'Береза', 
+    cost: 800, 
+    co2: 250, 
+    image: '🌿', 
+    region: 'Средняя полоса, Лесничества', 
+    desc: 'Символ русской природы, неприхотлива к почве.', 
+    bg: 'bg-lime-900/50' 
+  },
+  { 
+    id: 'apple', 
+    name: 'Яблоня', 
+    cost: 1200, 
+    co2: 180, 
+    image: '🍎', 
+    region: 'Фруктовые сады, Юг', 
+    desc: 'Приносит плоды и красиво цветет весной.', 
+    bg: 'bg-red-900/40' 
+  },
+  { 
+    id: 'thuja', 
+    name: 'Туя', 
+    cost: 1500, 
+    co2: 120, 
+    image: '🌲', 
+    region: 'Декоративные зоны, Аллеи', 
+    desc: 'Вечнозеленое растение, очищает воздух от микробов.', 
+    bg: 'bg-emerald-800/50' 
+  },
+  { 
+    id: 'spruce', 
+    name: 'Ель', 
+    cost: 2000, 
+    co2: 350, 
+    image: '🌲', 
+    region: 'Тайга, Северные регионы', 
+    desc: 'Мощный производитель кислорода круглый год.', 
+    bg: 'bg-teal-900/50' 
+  }
 ];
 
 const INITIAL_PLOTS: Plot[] = Array.from({ length: 12 }, (_, i) => ({
@@ -429,13 +484,13 @@ const BackgroundBubbles = () => (
 
 const App = () => {
   // Game State
-  const [activeTab, setActiveTab] = useState<'forest' | 'sponsors' | 'real' | 'impact' | 'profile'>('forest');
+  const [activeTab, setActiveTab] = useState<'forest' | 'shop' | 'sponsors' | 'real' | 'impact' | 'profile'>('forest');
   const [tokens, setTokens] = useState(10000000); // 10 Million NUN (Test User)
   const [energy, setEnergy] = useState(MAX_ENERGY); 
   const [xp, setXP] = useState(0);
   const [level, setLevel] = useState(1);
   const [plots, setPlots] = useState<Plot[]>(INITIAL_PLOTS);
-  const [realTreesOwned, setRealTreesOwned] = useState<number[]>([]);
+  const [myRealTrees, setMyRealTrees] = useState<MyRealTreeInstance[]>([]);
   const [onboardingStep, setOnboardingStep] = useState(0);
   const [partners, setPartners] = useState<Partner[]>(PARTNERS);
   const [selectedPlot, setSelectedPlot] = useState<Plot | null>(null);
@@ -455,7 +510,6 @@ const App = () => {
   const [achievements, setAchievements] = useState<Achievement[]>(INITIAL_ACHIEVEMENTS);
 
   // Modals
-  const [showShop, setShowShop] = useState(false);
   const [showTasks, setShowTasks] = useState(false);
   const [showWallet, setShowWallet] = useState(false);
   const [showReferral, setShowReferral] = useState(false);
@@ -463,9 +517,18 @@ const App = () => {
   const [showStoryGen, setShowStoryGen] = useState(false);
   const [showTonConnect, setShowTonConnect] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false); // NEW: Edit Profile
   const [showFriendProfile, setShowFriendProfile] = useState<Friend | null>(null);
+  const [plantingPlotId, setPlantingPlotId] = useState<number | null>(null);
   const [animationEffect, setAnimationEffect] = useState<{ plotId: number, type: 'grow' | 'fruit' } | null>(null);
   const [visitMode, setVisitMode] = useState<Friend | null>(null);
+  const [viewingRealTree, setViewingRealTree] = useState<MyRealTreeInstance | null>(null);
+  const [chatInput, setChatInput] = useState('');
+
+  // Edit Profile Temp State
+  const [tempName, setTempName] = useState(user.name);
+  const [tempHandle, setTempHandle] = useState(user.handle);
+  const [tempAvatar, setTempAvatar] = useState(user.avatar);
 
   // Effects
   useEffect(() => {
@@ -473,15 +536,24 @@ const App = () => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Restore essential state if needed, skipping for dev to keep "God Mode"
-        // setTokens(parsed.tokens); 
+        if (parsed.tokens !== undefined) setTokens(parsed.tokens);
+        if (parsed.energy !== undefined) setEnergy(parsed.energy);
+        if (parsed.xp !== undefined) setXP(parsed.xp);
+        if (parsed.level !== undefined) setLevel(parsed.level);
+        if (parsed.plots !== undefined) setPlots(parsed.plots);
+        if (parsed.user !== undefined) setUser(parsed.user);
+        if (parsed.myRealTrees !== undefined) setMyRealTrees(parsed.myRealTrees);
+        if (parsed.achievements !== undefined) setAchievements(parsed.achievements);
+        if (parsed.dailyTasks !== undefined) setDailyTasks(parsed.dailyTasks);
       } catch (e) { console.error("Save load error", e); }
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('nuncycle_state', JSON.stringify({ tokens, energy, xp, level, plots, user }));
-  }, [tokens, energy, xp, level, plots, user]);
+    localStorage.setItem('nuncycle_state', JSON.stringify({ 
+        tokens, energy, xp, level, plots, user, myRealTrees, achievements, dailyTasks 
+    }));
+  }, [tokens, energy, xp, level, plots, user, myRealTrees, achievements, dailyTasks]);
 
   useEffect(() => {
     // Green Day Event Logic
@@ -528,6 +600,12 @@ const App = () => {
     }));
   };
 
+  const saveProfile = () => {
+    setUser(prev => ({ ...prev, name: tempName, handle: tempHandle, avatar: tempAvatar }));
+    setShowEditProfile(false);
+    addNotification('Профиль обновлен', 'success');
+  };
+
   // --- ACTIONS ---
 
   const handleBuyPlot = (id: number, price: number) => {
@@ -546,25 +624,46 @@ const App = () => {
     }
   };
 
-  const handlePlant = (type: TreeType) => {
-    if (!selectedPlot) return;
+  const handlePlant = (type: TreeType, targetPlotId?: number | null) => {
+    // Auto select first empty plot if none selected
+    let plotToPlant: Plot | undefined | null = null;
+    
+    if (targetPlotId) {
+        plotToPlant = plots.find(p => p.id === targetPlotId);
+    } else if (selectedPlot) {
+        plotToPlant = selectedPlot;
+    } else {
+        plotToPlant = plots.find(p => p.status === 'empty');
+    }
+
+    if (!plotToPlant) {
+        addNotification('Нет свободных участков!', 'info');
+        setActiveTab('forest');
+        return;
+    }
+
     const treeStat = TREE_STATS[type];
     if (tokens >= treeStat.cost) {
       setTokens(prev => prev - treeStat.cost);
-      setPlots(prev => prev.map(p => p.id === selectedPlot.id ? { 
+      setPlots(prev => prev.map(p => p.id === plotToPlant!.id ? { 
         ...p, 
         status: 'planted', 
         tree: { type, level: 1, xp: 0, health: 100, lastWatered: Date.now(), isDiseased: false } 
       } : p));
+      
       addNotification(`${treeStat.name} посажено!`, 'success');
       setSelectedPlot(null);
-      setShowShop(false);
+      setPlantingPlotId(null); // Close selection modal
+      setActiveTab('forest'); 
       updateAchievement('first_tree', 1);
       updateAchievement('planted', plots.filter(p => p.status === 'planted').length + 1);
       
       // Animation
-      setAnimationEffect({ plotId: selectedPlot.id, type: 'grow' });
-      setTimeout(() => setAnimationEffect(null), 1000);
+      setTimeout(() => {
+          setAnimationEffect({ plotId: plotToPlant!.id, type: 'grow' });
+          setTimeout(() => setAnimationEffect(null), 1000);
+      }, 500);
+
     } else {
       addNotification('Недостаточно токенов', 'info');
     }
@@ -606,12 +705,25 @@ const App = () => {
     setDailyTasks(prev => prev.map(t => t.id === 'water_5' && !t.completed ? { ...t, current: t.current + 1, completed: t.current + 1 >= t.max } : t));
   };
 
-  const handleBuyRealTree = (treeId: number, cost: number) => {
+  const handleBuyRealTree = (speciesId: string, cost: number) => {
     if (tokens >= cost) {
         setTokens(prev => prev - cost);
-        setRealTreesOwned(prev => [...prev, treeId]);
-        addNotification('Поздравляем! Вы внесли вклад в планету.', 'success');
-        updateAchievement('real_tree', realTreesOwned.length + 1);
+        
+        const species = REAL_TREES_SPECIES.find(s => s.id === speciesId)!;
+        const newTree: MyRealTreeInstance = {
+            id: `rt_${Date.now()}`,
+            speciesId,
+            customName: species.name,
+            purchaseDate: new Date().toLocaleDateString(),
+            gps: `${(Math.random() * 100).toFixed(4)}, ${(Math.random() * 100).toFixed(4)}`, // Mock coords
+            history: [
+                { date: new Date().toLocaleDateString(), title: 'Заказ оформлен', desc: 'Дерево зарезервировано в питомнике.', icon: CheckCircle2 }
+            ]
+        };
+
+        setMyRealTrees(prev => [...prev, newTree]);
+        addNotification('Поздравляем! Дерево куплено.', 'success');
+        updateAchievement('real_tree', myRealTrees.length + 1);
     } else {
         addNotification('Недостаточно токенов', 'info');
     }
@@ -636,6 +748,25 @@ const App = () => {
               addNotification('Баланс пополнен! +5000 NUN', 'success');
           }, 2000);
       }
+  };
+
+  const handleSendMessage = () => {
+      if (!chatInput.trim()) return;
+      const newMsg: Message = { id: `m_${Date.now()}`, senderId: 'me', text: chatInput, type: 'text', timestamp: Date.now() };
+      setMessages(prev => [...prev, newMsg]);
+      setChatInput('');
+      
+      // Auto reply simulation
+      setTimeout(() => {
+          const reply: Message = { 
+              id: `m_${Date.now()+1}`, 
+              senderId: 'f1', 
+              text: 'Отлично! Заходи ко мне на поляну, помоги с поливом 🌿', 
+              type: 'text', 
+              timestamp: Date.now() 
+          };
+          setMessages(prev => [...prev, reply]);
+      }, 2000);
   };
 
   // --- RENDER HELPERS ---
@@ -665,7 +796,7 @@ const App = () => {
                 if (onboardingStep < steps.length - 1) setOnboardingStep(s => s + 1);
                 else {
                     setUser(u => ({ ...u, isLoggedIn: true }));
-                    setOnboardingStep(0);
+                    setOnboardingStep(steps.length);
                 }
             }}
             className="liquid-button w-full py-4 rounded-xl text-white font-bold text-lg"
@@ -720,12 +851,17 @@ const App = () => {
        <div className="flex justify-between items-center mb-6">
           <div className="flex gap-2">
              <button onClick={() => setShowTasks(true)} className="liquid-button w-12 h-12 rounded-full flex items-center justify-center text-white"><CheckCircle2 size={20}/></button>
-             <button onClick={() => setShowShop(true)} className="liquid-button w-12 h-12 rounded-full flex items-center justify-center text-white"><Search size={20}/></button>
           </div>
           <div className="text-right">
               <div className="text-xs text-gray-400">Ваш Лес</div>
               <div className="text-emerald-400 font-bold">День 12</div>
           </div>
+       </div>
+
+       {/* Info Tip */}
+       <div className="mb-4 flex items-center gap-2 text-xs text-gray-400 bg-black/20 p-2 rounded-lg">
+           <Info size={14} className="text-emerald-400" />
+           <span>Сажайте деревья в пустые слоты (+) и ухаживайте за ними.</span>
        </div>
 
        {/* Forest Grid - "Clearing" Style */}
@@ -755,6 +891,7 @@ const App = () => {
   const renderPlot = (plot: Plot) => {
       const isLocked = plot.status === 'locked';
       const isEmpty = plot.status === 'empty';
+      const isPlanted = plot.status === 'planted' && plot.tree !== null; // Strict check
       const isSelected = selectedPlot?.id === plot.id;
       const isAnimating = animationEffect?.plotId === plot.id;
       
@@ -764,65 +901,148 @@ const App = () => {
           onClick={() => {
               if (visitMode) {
                   // If visiting, maybe simple interact animation
-                  if (plot.tree) setAnimationEffect({ plotId: plot.id, type: 'grow' });
+                  if (plot.tree) {
+                      setAnimationEffect({ plotId: plot.id, type: 'grow' });
+                      setTimeout(() => setAnimationEffect(null), 500);
+                  }
               } else {
-                  if (!isLocked) setSelectedPlot(plot);
+                  if (!isLocked) {
+                      if (isPlanted) {
+                          setAnimationEffect({ plotId: plot.id, type: 'grow' });
+                          setTimeout(() => setAnimationEffect(null), 500);
+                          setSelectedPlot(plot);
+                      }
+                      
+                      if (isEmpty) {
+                          setPlantingPlotId(plot.id); // Open selection modal
+                      }
+                  }
                   if (isLocked) handleBuyPlot(plot.id, plot.price);
               }
           }}
           className={`
-            aspect-square relative rounded-[30px] flex items-center justify-center transition-all duration-300
+            aspect-square relative rounded-[30px] flex items-center justify-center transition-all duration-300 overflow-hidden cursor-pointer active:scale-95
             ${isLocked ? 'bg-black/30 border border-white/5' : 'bg-[#0f2e23] border border-emerald-500/20 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]'}
             ${isSelected ? 'ring-2 ring-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.4)] scale-105 z-10' : ''}
             ${isAnimating && animationEffect?.type === 'grow' ? 'animate-tree-pop' : ''}
           `}
         >
             {/* Soil Texture */}
-            {!isLocked && <div className="absolute inset-2 rounded-[25px] bg-[#1a4032] opacity-50"></div>}
+            {!isLocked && <div className="absolute inset-0 bg-[#1a4032] opacity-50"></div>}
+            
+            {/* Growth Stage Background Effect (Liquid Fill) */}
+             {isPlanted && plot.tree && (
+                 <div 
+                    className="absolute inset-0 bg-emerald-500/10 transition-all duration-700 ease-in-out pointer-events-none" 
+                    style={{ height: `${plot.tree.xp}%`, top: 'auto', bottom: 0 }}
+                 ></div>
+             )}
 
             {/* Content */}
             {isLocked ? (
-                <div className="text-center">
+                <div className="text-center relative z-10">
                     <Lock className="w-6 h-6 text-gray-600 mx-auto mb-1" />
                     <span className="text-[10px] font-bold text-gray-500">{plot.price} T</span>
                 </div>
             ) : isEmpty ? (
-                <div className="text-emerald-500/30 animate-pulse cursor-pointer">
-                    <div className="w-12 h-12 border-2 border-dashed border-emerald-500/30 rounded-full flex items-center justify-center">
-                        <span className="text-2xl">+</span>
+                <div className="text-emerald-500/30 animate-pulse cursor-pointer relative z-10 flex flex-col items-center">
+                    <div className="w-10 h-10 border-2 border-dashed border-emerald-500/30 rounded-full flex items-center justify-center mb-1">
+                        <span className="text-xl">+</span>
                     </div>
+                    <span className="text-[10px] font-bold">Сажать</span>
                 </div>
-            ) : (
-                <div className="relative z-10 flex flex-col items-center">
-                    {/* Falling Fruit Animation */}
-                    {isAnimating && animationEffect?.type === 'fruit' && (
-                        <>
-                            <div className="absolute top-0 left-0 text-yellow-400 animate-fruit-drop">✨</div>
-                            <div className="absolute top-0 right-0 text-yellow-400 animate-fruit-drop" style={{animationDelay: '0.2s'}}>✨</div>
-                        </>
-                    )}
-                    
-                    {/* Tree Icon */}
-                    <div className={`${TREE_STATS[plot.tree!.type].color} drop-shadow-[0_0_10px_rgba(0,0,0,0.8)] transform transition-transform duration-500`}>
-                        {React.createElement(TREE_STATS[plot.tree!.type].icon, { 
-                            size: 32 + (plot.tree!.level * 2), // Grows visually
-                            strokeWidth: 1.5 
-                        })}
-                    </div>
+            ) : isPlanted && plot.tree ? (
+                <div className="relative w-full h-full flex items-center justify-center p-2">
+                    {/* SVG Progress Ring */}
+                     <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="44" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="4" />
+                        <circle 
+                            cx="50" cy="50" r="44" 
+                            fill="none" 
+                            stroke="url(#progress-gradient)" 
+                            strokeWidth="4" 
+                            strokeDasharray="276" 
+                            strokeDashoffset={276 - (276 * plot.tree.xp / 100)} 
+                            strokeLinecap="round"
+                            className="transition-all duration-700 ease-out"
+                        />
+                         <defs>
+                            <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stopColor="#10b981" />
+                                <stop offset="100%" stopColor="#34d399" />
+                            </linearGradient>
+                         </defs>
+                     </svg>
 
-                    {/* Level Badge */}
-                    <div className="absolute -bottom-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10">
-                        <span className="text-[10px] font-bold text-white">Lvl {plot.tree!.level}</span>
+                    <div className="relative z-10 flex flex-col items-center">
+                        {/* Falling Fruit Animation */}
+                        {isAnimating && animationEffect?.type === 'fruit' && (
+                            <>
+                                <div className="absolute top-0 left-0 text-yellow-400 animate-fruit-drop">✨</div>
+                                <div className="absolute top-0 right-0 text-yellow-400 animate-fruit-drop" style={{animationDelay: '0.2s'}}>✨</div>
+                            </>
+                        )}
+                        
+                        {/* Tree Icon with Selected Glow Animation */}
+                        {TREE_STATS[plot.tree.type] ? (
+                            <div className={`${TREE_STATS[plot.tree.type].color} drop-shadow-[0_0_10px_rgba(0,0,0,0.8)] transform transition-transform duration-500 ${isSelected ? 'animate-selected-glow' : ''}`}>
+                                {React.createElement(TREE_STATS[plot.tree.type].icon, { 
+                                    size: 32 + (plot.tree.level * 2), // Grows visually
+                                    strokeWidth: 1.5 
+                                })}
+                            </div>
+                        ) : <div>?</div>}
+
+                        {/* Level Badge */}
+                        <div className="absolute -bottom-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10">
+                            <span className="text-[10px] font-bold text-white">Lvl {plot.tree.level}</span>
+                        </div>
                     </div>
                 </div>
-            )}
+            ) : null}
         </div>
       );
   };
 
+  const renderShop = () => (
+      <div className="p-4 pb-24">
+          <h2 className="text-2xl font-bold text-white mb-2">Банк Семян (Магазин)</h2>
+          <p className="text-gray-400 text-sm mb-6">Приобретайте семена для вашего виртуального леса. Каждое дерево имеет уникальные бонусы.</p>
+
+          <div className="grid grid-cols-2 gap-3">
+              {(Object.entries(TREE_STATS) as [TreeType, any][]).filter(([k]) => !k.startsWith('brand')).map(([key, stat]) => (
+                  <div key={key} className="liquid-card p-3 flex flex-col justify-between">
+                      <div className="flex justify-between items-start mb-2">
+                          <div className={`w-10 h-10 rounded-xl bg-black/30 flex items-center justify-center ${stat.color}`}>
+                              <stat.icon size={20} />
+                          </div>
+                          <span className="text-[10px] px-2 py-0.5 bg-white/10 rounded-full text-gray-300 border border-white/5">{stat.rarity}</span>
+                      </div>
+                      
+                      <div className="mb-2">
+                          <div className="font-bold text-white text-sm leading-tight">{stat.name}</div>
+                          <div className="text-[10px] text-emerald-400 mt-0.5">+{stat.income} NUN/день</div>
+                      </div>
+                      
+                      <p className="text-[10px] text-gray-500 leading-tight mb-3 line-clamp-2 h-8">{stat.desc}</p>
+
+                      <button 
+                          onClick={() => handlePlant(key)}
+                          className="w-full py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-xs font-bold rounded-lg border border-emerald-500/30 transition-colors flex items-center justify-center gap-1 active:scale-95"
+                      >
+                          <span>Купить</span>
+                          <span className="bg-emerald-500/20 px-1 rounded text-[10px]">{stat.cost} T</span>
+                      </button>
+                  </div>
+              ))}
+          </div>
+      </div>
+  );
+
   const renderSponsors = () => (
       <div className="p-4 pb-24">
-          <h2 className="text-2xl font-bold text-white mb-6">Спонсоры Экосистемы</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">Спонсоры</h2>
+          <p className="text-gray-400 text-sm mb-6">Выполняйте квесты брендов и получайте уникальные награды.</p>
           
           {/* Daily Gift Banner */}
           <div className="liquid-card p-6 mb-8 bg-gradient-to-r from-purple-900/60 to-blue-900/60 border-purple-500/30">
@@ -872,33 +1092,72 @@ const App = () => {
 
   const renderRealTrees = () => (
       <div className="p-4 pb-24">
-         <div className="flex items-center justify-between mb-6">
-             <h2 className="text-2xl font-bold text-white">Банк Семян (NFT)</h2>
-             <div className="flex gap-2 text-xs">
-                 <button className="px-3 py-1 bg-emerald-500/20 text-emerald-300 rounded-full border border-emerald-500/50">Все</button>
-                 <button className="px-3 py-1 bg-black/30 text-gray-400 rounded-full">RWA</button>
-             </div>
+         <div className="mb-6">
+             <h2 className="text-2xl font-bold text-white mb-2">Real World Assets (RWA)</h2>
+             <p className="text-gray-400 text-sm">Покупайте настоящие деревья за токены. Мы сажаем их в реальном мире, присваиваем GPS и следим за ростом.</p>
          </div>
 
-         <div className="grid grid-cols-2 gap-4">
-             {REAL_TREES.map(tree => (
-                 <div key={tree.id} className={`liquid-card p-0 flex flex-col h-full group`}>
-                     <div className={`h-24 ${tree.bg} flex items-center justify-center text-4xl relative overflow-hidden`}>
-                         <span className="relative z-10 group-hover:scale-110 transition-transform">{tree.image}</span>
-                         {tree.isSponsored && <span className="absolute top-2 right-2 bg-yellow-500/20 text-yellow-300 text-[10px] px-2 py-0.5 rounded-full border border-yellow-500/30">Sponsored</span>}
+         {/* My Real Trees Section */}
+         {myRealTrees.length > 0 && (
+             <div className="mb-8">
+                 <h3 className="text-lg font-bold text-emerald-400 mb-3 flex items-center gap-2">
+                     <Leaf size={16}/> Мои Деревья ({myRealTrees.length})
+                 </h3>
+                 <div className="space-y-3">
+                     {myRealTrees.map(tree => {
+                         const species = REAL_TREES_SPECIES.find(s => s.id === tree.speciesId)!;
+                         return (
+                             <div key={tree.id} onClick={() => setViewingRealTree(tree)} className="liquid-card p-4 flex items-center justify-between cursor-pointer active:scale-95 transition-transform">
+                                 <div className="flex items-center gap-4">
+                                     <div className={`w-12 h-12 rounded-full ${species.bg} flex items-center justify-center text-2xl`}>
+                                         {species.image}
+                                     </div>
+                                     <div>
+                                         <div className="font-bold text-white text-sm">{tree.customName}</div>
+                                         <div className="text-[10px] text-gray-400 flex items-center gap-1">
+                                             <MapPin size={10}/> {tree.gps}
+                                         </div>
+                                     </div>
+                                 </div>
+                                 <div className="text-right">
+                                     <div className="px-2 py-1 bg-emerald-500/20 text-emerald-300 text-[10px] rounded-full border border-emerald-500/30">
+                                         Active
+                                     </div>
+                                 </div>
+                             </div>
+                         );
+                     })}
+                 </div>
+             </div>
+         )}
+
+         <h3 className="text-lg font-bold text-white mb-4">Доступные участки</h3>
+         <div className="grid grid-cols-1 gap-4">
+             {REAL_TREES_SPECIES.map(tree => (
+                 <div key={tree.id} className={`liquid-card p-0 flex flex-row overflow-hidden group h-32`}>
+                     <div className={`w-28 ${tree.bg} flex items-center justify-center text-5xl relative`}>
+                         <span className="relative z-10">{tree.image}</span>
                      </div>
-                     <div className="p-3 flex-1 flex flex-col">
-                         <h3 className="font-bold text-sm text-white leading-tight mb-1">{tree.name}</h3>
-                         <div className="flex items-center gap-1 mb-2">
-                             <Leaf size={10} className="text-emerald-400"/>
-                             <span className="text-xs text-emerald-400">-{tree.co2} кг CO₂</span>
+                     <div className="p-4 flex-1 flex flex-col justify-between">
+                         <div>
+                             <div className="flex justify-between items-start">
+                                 <h3 className="font-bold text-lg text-white leading-tight">{tree.name}</h3>
+                                 <div className="flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-900/30 px-2 py-1 rounded">
+                                     <Leaf size={10} />
+                                     <span>-{tree.co2} кг CO₂</span>
+                                 </div>
+                             </div>
+                             <div className="text-[10px] text-gray-400 mt-1 flex items-center gap-1">
+                                 <MapPin size={10}/> {tree.region}
+                             </div>
+                             <p className="text-xs text-gray-500 mt-2 line-clamp-2">{tree.desc}</p>
                          </div>
-                         <div className="text-[10px] text-gray-400 mb-3">{tree.req}</div>
+                         
                          <button 
                              onClick={() => handleBuyRealTree(tree.id, tree.cost)}
-                             className="mt-auto liquid-button w-full py-2 rounded-lg text-xs font-bold text-white flex items-center justify-center gap-1"
+                             className="mt-2 liquid-button w-full py-2 rounded-lg text-sm font-bold text-white flex items-center justify-center gap-1"
                          >
-                             <span>{tree.cost}</span>
+                             <span>Купить за {tree.cost}</span>
                              <span className="opacity-70">NUN</span>
                          </button>
                      </div>
@@ -910,13 +1169,14 @@ const App = () => {
 
   const renderImpact = () => (
       <div className="p-4 pb-24">
-          <h2 className="text-2xl font-bold text-white mb-6">Ваш Вклад</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">Ваш Вклад</h2>
+          <p className="text-gray-400 text-sm mb-6">Как ваши игровые действия влияют на реальный мир.</p>
           
           {/* Main Counter */}
           <div className="liquid-card p-6 mb-8 text-center bg-gradient-to-br from-emerald-900/40 to-black/40">
               <div className="text-gray-400 text-sm mb-2 uppercase tracking-widest">Общий офсет CO₂</div>
               <div className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
-                  {realTreesOwned.reduce((acc, id) => acc + (REAL_TREES.find(t=>t.id===id)?.co2 || 0), 0)} кг
+                  {myRealTrees.reduce((acc, t) => acc + (REAL_TREES_SPECIES.find(s=>s.id===t.speciesId)?.co2 || 0), 0)} кг
               </div>
               <div className="mt-4 flex justify-center gap-2">
                  <div className="h-2 w-full max-w-[200px] bg-gray-700 rounded-full overflow-hidden">
@@ -947,489 +1207,554 @@ const App = () => {
                   <div className="relative pl-6">
                       <div className="absolute -left-[21px] top-0 w-4 h-4 rounded-full bg-emerald-500 border-4 border-[#020617]"></div>
                       <h4 className="font-bold text-emerald-400">Покупка в Игре</h4>
-                      <p className="text-xs text-gray-400">Вы покупаете NFT дерево за токены NUN.</p>
+                      <p className="text-xs text-gray-400">Вы покупаете RWA дерево за токены NUN.</p>
                   </div>
                   <div className="relative pl-6">
                       <div className="absolute -left-[21px] top-0 w-4 h-4 rounded-full bg-gray-700 border-4 border-[#020617]"></div>
                       <h4 className="font-bold text-gray-300">Посадка Партнером</h4>
-                      <p className="text-xs text-gray-400">Наш партнер сажает реальный саженец в выбранной зоне.</p>
+                      <p className="text-xs text-gray-400">Наш эко-партнер сажает дерево в выбранной зоне.</p>
                   </div>
                   <div className="relative pl-6">
                       <div className="absolute -left-[21px] top-0 w-4 h-4 rounded-full bg-gray-700 border-4 border-[#020617]"></div>
-                      <h4 className="font-bold text-gray-300">Верификация</h4>
-                      <p className="text-xs text-gray-400">Фото, координаты и данные заносятся в блокчейн.</p>
+                      <h4 className="font-bold text-gray-300">GPS & Фотоотчет</h4>
+                      <p className="text-xs text-gray-400">Вы получаете координаты и NFT паспорт дерева.</p>
                   </div>
               </div>
           </div>
 
-          {/* Active Projects */}
-          <h3 className="text-lg font-bold text-white mb-4">Активные Проекты</h3>
-          <div className="space-y-3">
-              <div className="liquid-card p-3 flex items-center gap-3">
-                  <div className="w-12 h-12 bg-cover bg-center rounded-lg" style={{backgroundImage: 'url(https://images.unsplash.com/photo-1516214104703-d870798883c5?auto=format&fit=crop&q=80&w=100)'}}></div>
-                  <div>
-                      <div className="font-bold text-white">Восстановление Сибири</div>
-                      <div className="text-xs text-gray-400">Россия • Хвойные леса</div>
-                  </div>
-              </div>
-          </div>
+           {/* Active Projects */}
+           <div>
+               <h3 className="text-lg font-bold text-white mb-4">Активные Эко-Проекты</h3>
+               <div className="grid grid-cols-1 gap-3">
+                   {['Леса Сибири', 'Восстановление Амазонии', 'Зеленый Казахстан'].map((p, i) => (
+                       <div key={i} className="liquid-card p-3 flex items-center justify-between">
+                           <span className="text-sm font-bold text-gray-300">{p}</span>
+                           <span className="text-xs text-emerald-400 bg-emerald-900/30 px-2 py-1 rounded">Активен</span>
+                       </div>
+                   ))}
+               </div>
+           </div>
       </div>
   );
 
   const renderProfile = () => (
       <div className="p-4 pb-24">
+          {/* Header */}
           <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl font-bold text-white">Профиль</h2>
-              <Settings className="text-gray-400" />
-          </div>
-
-          {/* User Card */}
-          <div className="flex items-center gap-4 mb-8">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 p-0.5 relative">
-                  <div className="w-full h-full bg-[#020617] rounded-full flex items-center justify-center text-4xl">
+              <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center text-4xl border-2 border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
                       {user.avatar}
                   </div>
-                  <div className="absolute bottom-0 right-0 w-6 h-6 bg-emerald-500 rounded-full border-2 border-[#020617] flex items-center justify-center text-[10px] font-bold">
-                      {level}
-                  </div>
-              </div>
-              <div className="flex-1">
-                  <div className="text-white font-bold text-xl">{user.name}</div>
-                  <div className="text-gray-400 text-sm">{user.handle}</div>
-                  <div className="flex gap-2 mt-2">
-                      <button onClick={() => setShowWallet(true)} className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded-full border border-emerald-500/30 flex items-center gap-1">
-                          <Wallet size={12}/> Кошелек
-                      </button>
-                      <button onClick={() => setShowReferral(true)} className="px-3 py-1 bg-purple-500/20 text-purple-400 text-xs rounded-full border border-purple-500/30">
-                          Invite
-                      </button>
-                  </div>
-              </div>
-          </div>
-
-          {/* TON Connect Status */}
-          <div className="liquid-card p-4 mb-6 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400">
-                      <span className="font-bold text-xs">TON</span>
-                  </div>
                   <div>
-                      <div className="text-white font-bold text-sm">TON Connect</div>
-                      <div className="text-xs text-gray-400">{user.tonAddress ? `${user.tonAddress.slice(0,4)}...${user.tonAddress.slice(-4)}` : 'Не подключен'}</div>
+                      <h2 className="text-xl font-bold text-white">{user.name}</h2>
+                      <div className="text-sm text-emerald-400 font-mono">{user.handle}</div>
+                      <div className="text-xs text-gray-400">В игре с {user.joinDate}</div>
                   </div>
               </div>
               <button 
-                onClick={() => user.tonAddress ? setShowWallet(true) : setShowTonConnect(true)}
-                className={`px-4 py-2 rounded-lg text-xs font-bold ${user.tonAddress ? 'bg-gray-700/50 text-gray-300' : 'bg-blue-600 text-white'}`}
+                onClick={() => {
+                   setTempName(user.name);
+                   setTempHandle(user.handle);
+                   setTempAvatar(user.avatar);
+                   setShowEditProfile(true);
+                }} 
+                className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
               >
-                  {user.tonAddress ? 'Открыть' : 'Connect'}
+                  <Edit2 size={16} />
               </button>
           </div>
 
-          {/* Social Hub */}
+          {/* Stats Grid */}
           <div className="grid grid-cols-2 gap-4 mb-6">
-              <button onClick={() => setShowChat(true)} className="liquid-card p-4 flex flex-col items-center gap-2 hover:bg-white/5">
-                  <MessageCircle className="text-cyan-400" />
-                  <span className="text-sm font-bold text-white">Чат</span>
-                  {messages.length > 0 && <span className="text-[10px] text-gray-400">{messages.length} сообщений</span>}
-              </button>
-              <button className="liquid-card p-4 flex flex-col items-center gap-2 hover:bg-white/5">
-                  <Users className="text-purple-400" />
-                  <span className="text-sm font-bold text-white">Друзья</span>
-                  <span className="text-[10px] text-gray-400">{friends.length} друзей</span>
-              </button>
+               <div className="liquid-card p-4">
+                   <div className="text-gray-400 text-xs mb-1">Уровень</div>
+                   <div className="text-2xl font-bold text-white">{level}</div>
+               </div>
+               <div className="liquid-card p-4">
+                   <div className="text-gray-400 text-xs mb-1">Приглашено</div>
+                   <div className="text-2xl font-bold text-white">{user.invitedCount}</div>
+               </div>
           </div>
 
-          {/* Friends List (Preview) */}
-          <h3 className="text-lg font-bold text-white mb-4">Друзья</h3>
-          <div className="space-y-3 mb-8">
-              {friends.map(friend => (
-                  <div key={friend.id} onClick={() => setShowFriendProfile(friend)} className="liquid-card p-3 flex items-center justify-between cursor-pointer active:scale-95 transition-transform">
-                      <div className="flex items-center gap-3">
-                          <span className="text-2xl">{friend.avatar}</span>
-                          <div>
-                              <div className="text-white font-bold text-sm">{friend.name}</div>
-                              <div className="text-[10px] text-gray-400">{friend.status} • Lvl {friend.level}</div>
-                          </div>
+          {/* Wallet Section */}
+          <div className="liquid-card p-6 mb-6">
+              <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center gap-2">
+                      <Wallet className="text-blue-400" />
+                      <span className="font-bold text-white">TON Wallet</span>
+                  </div>
+                  {user.tonAddress ? (
+                      <span className="text-xs font-mono text-emerald-400 bg-emerald-900/30 px-2 py-1 rounded">{user.tonAddress}</span>
+                  ) : (
+                      <span className="text-xs text-gray-500">Не подключен</span>
+                  )}
+              </div>
+              
+              {!user.tonAddress ? (
+                  <button onClick={() => setShowTonConnect(true)} className="liquid-button w-full py-3 rounded-xl flex items-center justify-center gap-2 text-white font-bold">
+                      <Zap size={16} /> Подключить TON
+                  </button>
+              ) : (
+                  <div className="space-y-2">
+                      <div className="text-2xl font-bold text-white text-center mb-2">{user.tonBalance} TON</div>
+                      <div className="grid grid-cols-2 gap-2">
+                          <button onClick={handleDepositTon} className="py-2 bg-blue-500/20 text-blue-300 rounded-lg border border-blue-500/30 font-bold hover:bg-blue-500/30">
+                              Пополнить
+                          </button>
+                          <button disabled className="py-2 bg-gray-800 text-gray-500 rounded-lg border border-gray-700 cursor-not-allowed flex items-center justify-center gap-1">
+                              Вывести <span className="text-[8px] bg-gray-700 px-1 rounded">SOON</span>
+                          </button>
                       </div>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setVisitMode(friend); setActiveTab('forest'); }}
-                        className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs rounded-lg"
-                      >
-                          Посетить
-                      </button>
                   </div>
-              ))}
+              )}
           </div>
 
-          {/* Achievements List */}
-          <h3 className="text-lg font-bold text-white mb-4">Достижения</h3>
-          <div className="space-y-3">
-              {achievements.map(ach => (
-                  <div key={ach.id} className={`liquid-card p-3 flex gap-4 ${!ach.unlocked && 'opacity-60 grayscale'}`}>
-                       <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${ach.unlocked ? 'bg-gradient-to-br from-yellow-400 to-orange-500 text-black' : 'bg-gray-700 text-gray-400'}`}>
-                           <ach.icon size={20} />
-                       </div>
-                       <div className="flex-1">
-                           <div className="flex justify-between items-center mb-1">
-                               <span className="text-sm font-bold text-white">{ach.title}</span>
-                               <span className="text-[10px] text-emerald-400">+{ach.rewardXP} XP</span>
-                           </div>
-                           <div className="text-[10px] text-gray-400 mb-2">{ach.desc}</div>
-                           <div className="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden">
-                               <div className="h-full bg-emerald-500" style={{width: `${(ach.progress / ach.max) * 100}%`}}></div>
-                           </div>
-                       </div>
-                  </div>
-              ))}
+          {/* Socials */}
+          <div className="mb-6">
+              <h3 className="font-bold text-white mb-3">Социальное</h3>
+              <div className="grid grid-cols-2 gap-2">
+                  <button onClick={() => setShowReferral(true)} className="liquid-button py-3 rounded-xl text-white font-bold flex items-center justify-center gap-2">
+                      <Users size={18} /> Рефералы
+                  </button>
+                  <button onClick={() => setShowSocialShare(true)} className="liquid-button py-3 rounded-xl text-white font-bold flex items-center justify-center gap-2">
+                      <Share2 size={18} /> Поделиться
+                  </button>
+              </div>
           </div>
-      </div>
-  );
+          
+          <div className="mb-6">
+              <button onClick={() => setShowChat(true)} className="w-full py-4 bg-indigo-600/20 border border-indigo-500/50 rounded-xl text-indigo-300 font-bold flex items-center justify-center gap-2">
+                  <MessageCircle /> Чат с друзьями
+              </button>
+          </div>
 
-  // --- MODALS ---
-
-  const renderModals = () => (
-      <>
-        {/* Plot Interaction Modal */}
-        {selectedPlot && !visitMode && (
-           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none">
-              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto" onClick={() => setSelectedPlot(null)}></div>
-              <div className="liquid-card w-full max-w-sm m-4 p-6 pointer-events-auto animate-grow">
-                  <div className="flex justify-between items-start mb-6">
-                      <div className="flex gap-4">
-                          <div className={`w-16 h-16 rounded-2xl bg-emerald-900/40 flex items-center justify-center text-4xl border border-emerald-500/30 ${TREE_STATS[selectedPlot.tree!.type].color}`}>
-                             {React.createElement(TREE_STATS[selectedPlot.tree!.type].icon)}
+          {/* Achievements */}
+          <div>
+              <h3 className="font-bold text-white mb-3 flex items-center gap-2"><Trophy size={16} className="text-yellow-400"/> Достижения</h3>
+              <div className="space-y-3">
+                  {achievements.map(ach => (
+                      <div key={ach.id} className={`liquid-card p-3 flex items-center gap-4 ${ach.unlocked ? 'border-yellow-500/30' : 'opacity-70 grayscale'}`}>
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${ach.unlocked ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-800 text-gray-600'}`}>
+                              <ach.icon size={20} />
                           </div>
-                          <div>
-                              <h3 className="text-xl font-bold text-white">{TREE_STATS[selectedPlot.tree!.type].name}</h3>
-                              <div className="flex gap-2 text-xs text-gray-400 mt-1">
-                                  <span>Lvl {selectedPlot.tree!.level}</span>
-                                  <span>•</span>
-                                  <span className={TREE_STATS[selectedPlot.tree!.type].color}>{TREE_STATS[selectedPlot.tree!.type].rarity}</span>
+                          <div className="flex-1">
+                              <div className="text-sm font-bold text-white">{ach.title}</div>
+                              <div className="text-xs text-gray-400">{ach.desc}</div>
+                              <div className="w-full h-1 bg-gray-800 rounded-full mt-2 overflow-hidden">
+                                  <div className="h-full bg-yellow-400" style={{ width: `${(ach.progress / ach.max) * 100}%` }}></div>
                               </div>
                           </div>
                       </div>
-                      <button onClick={() => setSelectedPlot(null)} className="text-gray-400"><X /></button>
-                  </div>
-
-                  {/* Actions Grid */}
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                      <button onClick={() => handleCare('water')} className="liquid-button p-4 rounded-xl flex flex-col items-center gap-2 group">
-                          <CloudRain className="text-cyan-400 group-hover:scale-110 transition-transform" />
-                          <span className="text-sm font-bold text-white">Полить</span>
-                          <span className="text-[10px] text-gray-400">-1 Энергии</span>
-                      </button>
-                      <button onClick={() => handleCare('fertilize')} className="liquid-button p-4 rounded-xl flex flex-col items-center gap-2 group">
-                          <Sparkles className="text-yellow-400 group-hover:scale-110 transition-transform" />
-                          <span className="text-sm font-bold text-white">Удобрить</span>
-                          <span className="text-[10px] text-gray-400">-1 Энергии</span>
-                      </button>
-                      <button onClick={() => handleCare('prune')} className="liquid-button p-4 rounded-xl flex flex-col items-center gap-2 group">
-                          <Edit2 className="text-orange-400 group-hover:scale-110 transition-transform" />
-                          <span className="text-sm font-bold text-white">Обрезать</span>
-                          <span className="text-[10px] text-gray-400">-1 Энергии</span>
-                      </button>
-                      <button onClick={() => handleCare('protect')} className="liquid-button p-4 rounded-xl flex flex-col items-center gap-2 group">
-                          <Shield className="text-purple-400 group-hover:scale-110 transition-transform" />
-                          <span className="text-sm font-bold text-white">Защитить</span>
-                          <span className="text-[10px] text-gray-400">-1 Энергии</span>
-                      </button>
-                  </div>
+                  ))}
               </div>
-           </div>
-        )}
-
-        {/* Shop Modal */}
-        {showShop && (
-            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                <div className="liquid-card w-full max-w-sm max-h-[80vh] overflow-hidden flex flex-col">
-                    <div className="p-4 border-b border-white/10 flex justify-between items-center">
-                        <h2 className="text-xl font-bold text-white">Магазин Саженцев</h2>
-                        <button onClick={() => setShowShop(false)}><X className="text-gray-400"/></button>
-                    </div>
-                    <div className="overflow-y-auto p-4 space-y-3 custom-scroll">
-                        {(Object.entries(TREE_STATS) as [TreeType, any][]).filter(([k]) => !k.startsWith('brand')).map(([key, stat]) => (
-                            <div key={key} className="bg-white/5 p-3 rounded-xl flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-lg bg-black/40 flex items-center justify-center ${stat.color}`}>
-                                        <stat.icon size={20} />
-                                    </div>
-                                    <div>
-                                        <div className="font-bold text-white text-sm">{stat.name}</div>
-                                        <div className="text-[10px] text-gray-400">{stat.rarity} • +{stat.income} NUN/день</div>
-                                    </div>
-                                </div>
-                                <button 
-                                  onClick={() => { setSelectedPlot(plots.find(p=>p.status==='empty') || null); if(selectedPlot) handlePlant(key); else { setShowShop(false); addNotification('Выберите пустой участок', 'info'); } }}
-                                  className="px-3 py-1.5 bg-emerald-500 text-white text-xs font-bold rounded-lg"
-                                >
-                                    {stat.cost} T
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        )}
-
-        {/* Tasks Modal */}
-        {showTasks && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                <div className="liquid-card w-full max-w-sm p-6">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-bold text-white">Ежедневные Задания</h2>
-                        <button onClick={() => setShowTasks(false)}><X className="text-gray-400"/></button>
-                    </div>
-                    <div className="space-y-3">
-                        {dailyTasks.map(task => (
-                            <div key={task.id} className="bg-white/5 p-3 rounded-xl">
-                                <div className="flex justify-between text-sm text-white mb-2">
-                                    <span>{task.text}</span>
-                                    <span className="text-yellow-400">+{task.reward} T</span>
-                                </div>
-                                <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
-                                    <div className={`h-full ${task.completed ? 'bg-green-500' : 'bg-yellow-500'}`} style={{width: `${(task.current / task.max) * 100}%`}}></div>
-                                </div>
-                                {task.completed && (
-                                    <div className="text-right mt-1">
-                                        <span className="text-[10px] text-green-400 uppercase font-bold">Выполнено</span>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        )}
-
-        {/* TON Wallet Modal */}
-        {showTonConnect && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
-                <div className="liquid-card w-full max-w-sm p-6 text-center">
-                    <div className="w-16 h-16 bg-blue-500 mx-auto rounded-full flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(59,130,246,0.5)]">
-                        <Wallet className="text-white w-8 h-8" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Connect TON Wallet</h2>
-                    <p className="text-gray-400 text-sm mb-6">Сканируйте QR код через Tonkeeper или выберите кошелек.</p>
-                    
-                    <div className="bg-white p-4 rounded-xl mx-auto mb-6 w-48 h-48 flex items-center justify-center">
-                        <QrCode className="w-40 h-40 text-black" />
-                    </div>
-                    
-                    <button onClick={handleTonConnect} className="liquid-button w-full py-3 rounded-xl text-white font-bold mb-3">
-                        Проверить подключение
-                    </button>
-                    <button onClick={() => setShowTonConnect(false)} className="text-gray-400 text-sm">Отмена</button>
-                </div>
-            </div>
-        )}
-
-        {/* Wallet Dashboard Modal */}
-        {showWallet && (
-            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                <div className="liquid-card w-full max-w-sm p-6">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl font-bold text-white">Кошелек</h2>
-                        <button onClick={() => setShowWallet(false)}><X className="text-gray-400"/></button>
-                    </div>
-
-                    {/* Balance Cards */}
-                    <div className="grid grid-cols-2 gap-3 mb-6">
-                         <div className="bg-emerald-900/30 p-3 rounded-xl border border-emerald-500/20">
-                             <div className="text-xs text-gray-400 mb-1">Баланс NUN</div>
-                             <div className="text-lg font-bold text-emerald-400">{tokens.toLocaleString()}</div>
-                         </div>
-                         <div className="bg-blue-900/30 p-3 rounded-xl border border-blue-500/20">
-                             <div className="text-xs text-gray-400 mb-1">Баланс TON</div>
-                             <div className="text-lg font-bold text-blue-400">{user.tonBalance} TON</div>
-                         </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="space-y-3">
-                        <button onClick={handleDepositTon} className="liquid-button w-full py-3 rounded-xl flex items-center justify-center gap-2 text-white font-bold">
-                            <ArrowDownLeft size={18} /> Пополнить TON
-                        </button>
-                        <button disabled className="w-full py-3 rounded-xl bg-gray-800 text-gray-500 font-bold flex items-center justify-center gap-2 border border-gray-700 cursor-not-allowed">
-                             <ArrowUpRight size={18} /> Вывод NUN
-                             <span className="text-[10px] bg-red-500/20 text-red-400 px-2 rounded-full">Coming Soon</span>
-                        </button>
-                        <button disabled className="w-full py-3 rounded-xl bg-gray-800 text-gray-500 font-bold flex items-center justify-center gap-2 border border-gray-700 cursor-not-allowed">
-                             <ArrowRightLeft size={18} /> Обмен (Swap)
-                             <span className="text-[10px] bg-red-500/20 text-red-400 px-2 rounded-full">Listing</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        )}
-
-        {/* Social Share / Story Generator */}
-        {showSocialShare && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
-                <div className="liquid-card w-full max-w-sm p-6 text-center">
-                    <h2 className="text-xl font-bold text-white mb-6">Поделиться Достижением</h2>
-                    
-                    {/* Story Preview */}
-                    <div className="aspect-[9/16] bg-gradient-to-br from-emerald-900 to-[#020617] rounded-xl border border-emerald-500/30 p-6 flex flex-col items-center justify-center mb-6 relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-full opacity-30 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-                        <div className="z-10 text-center">
-                            <div className="text-4xl mb-4">{user.avatar}</div>
-                            <h3 className="text-2xl font-black text-white mb-1">NUNCYCLE</h3>
-                            <p className="text-emerald-400 font-bold text-lg mb-4">Уровень {level}</p>
-                            <div className="text-5xl font-black text-white mb-4">{realTreesOwned.length}</div>
-                            <p className="text-gray-300 text-xs uppercase tracking-widest mb-8">Реальных Деревьев</p>
-                            <div className="bg-white text-black px-4 py-2 rounded-full font-bold text-sm">Join: {user.referralCode}</div>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-4 gap-4">
-                        <button className="flex flex-col items-center gap-1 text-xs text-gray-400"><div className="w-12 h-12 bg-pink-600 rounded-full flex items-center justify-center text-white"><Instagram /></div> Stories</button>
-                        <button className="flex flex-col items-center gap-1 text-xs text-gray-400"><div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white"><Send /></div> Telegram</button>
-                        <button className="flex flex-col items-center gap-1 text-xs text-gray-400"><div className="w-12 h-12 bg-blue-400 rounded-full flex items-center justify-center text-white"><Twitter /></div> Twitter</button>
-                        <button className="flex flex-col items-center gap-1 text-xs text-gray-400"><div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center text-white"><Copy /></div> Copy</button>
-                    </div>
-                    
-                    <button onClick={() => setShowSocialShare(false)} className="mt-6 text-gray-400 text-sm">Закрыть</button>
-                </div>
-            </div>
-        )}
-        
-        {/* Chat Modal */}
-        {showChat && (
-            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                <div className="liquid-card w-full max-w-sm h-[80vh] flex flex-col">
-                    <div className="p-4 border-b border-white/10 flex justify-between items-center bg-black/20">
-                        <h2 className="text-lg font-bold text-white">Чат Лесников</h2>
-                        <button onClick={() => setShowChat(false)}><X className="text-gray-400"/></button>
-                    </div>
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scroll bg-black/10">
-                        {messages.map(msg => (
-                            <div key={msg.id} className={`flex ${msg.senderId === 'me' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[80%] p-3 rounded-2xl ${msg.senderId === 'me' ? 'bg-emerald-600 text-white rounded-br-none' : 'bg-gray-700 text-gray-200 rounded-bl-none'}`}>
-                                    {msg.text}
-                                    {msg.type === 'help_request' && (
-                                        <button className="mt-2 w-full py-1 bg-white/20 rounded text-xs font-bold">Помочь (+10 XP)</button>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="p-3 border-t border-white/10 flex gap-2">
-                        <input type="text" placeholder="Сообщение..." className="flex-1 bg-black/30 border border-white/10 rounded-full px-4 text-white text-sm focus:outline-none focus:border-emerald-500" />
-                        <button className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white"><Send size={18}/></button>
-                    </div>
-                </div>
-            </div>
-        )}
-      </>
+          </div>
+      </div>
   );
 
-  if (!user.isLoggedIn) return renderAuth();
-  // Fix: Commented out unreachable code that causes a TypeScript error due to unintentional comparison of boolean types.
-  // if (onboardingStep < 4 && !user.isLoggedIn) return renderOnboarding(); // Only shows if manually triggered, currently auth skips it for simplicity, fixed logic:
-  // Fix for onboarding logic: show onboarding if logged in but new? For now just show App content
+  const renderBottomNav = () => (
+    <div className="fixed bottom-0 left-0 right-0 bg-black/60 backdrop-blur-xl border-t border-white/5 px-6 py-4 flex justify-between items-center z-50">
+        {[
+            { id: 'forest', icon: TreeDeciduous, label: 'Лес' },
+            { id: 'shop', icon: ShoppingBag, label: 'Магазин' },
+            { id: 'real', icon: Globe, label: 'Real' },
+            { id: 'sponsors', icon: HeartHandshake, label: 'Спонсоры' },
+            { id: 'impact', icon: Activity, label: 'Вклад' },
+            { id: 'profile', icon: User, label: 'Профиль' }
+        ].map(item => (
+            <button 
+                key={item.id} 
+                onClick={() => setActiveTab(item.id as any)}
+                className={`flex flex-col items-center gap-1 transition-all duration-300 ${activeTab === item.id ? 'text-emerald-400 scale-110' : 'text-gray-500 hover:text-gray-300'}`}
+            >
+                <item.icon size={24} strokeWidth={activeTab === item.id ? 2.5 : 2} />
+                <span className="text-[10px] font-bold">{item.label}</span>
+            </button>
+        ))}
+    </div>
+  );
 
   return (
-    <div className="min-h-screen pb-safe-area font-nunito text-gray-100 relative selection:bg-emerald-500/30">
+    <div className="h-screen w-full flex flex-col font-sans text-gray-100 selection:bg-emerald-500/30 relative">
       <BackgroundBubbles />
+
+      {!user.isLoggedIn && onboardingStep < 4 && renderOnboarding()}
+      {!user.isLoggedIn && onboardingStep === 4 && renderAuth()}
       
       {/* Top Bar */}
-      <div className="sticky top-0 z-30 px-4 py-3 bg-[#020617]/80 backdrop-blur-md flex justify-between items-center border-b border-white/5">
-         <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/50 text-xl shadow-[0_0_10px_rgba(16,185,129,0.3)]">
-                 {user.avatar}
-             </div>
-             <div>
-                 <div className="text-xs text-gray-400">Уровень {level}</div>
-                 <div className="h-1.5 w-20 bg-gray-700 rounded-full mt-1 overflow-hidden">
-                     <div className="h-full bg-emerald-400 transition-all duration-500" style={{width: `${(xp % LEVEL_XP_THRESHOLD) / LEVEL_XP_THRESHOLD * 100}%`}}></div>
-                 </div>
-             </div>
-         </div>
-         <div className="flex items-center gap-3">
-             <div className="bg-black/40 px-3 py-1.5 rounded-full border border-yellow-500/30 flex items-center gap-2">
-                 <Coins className="text-yellow-400 w-4 h-4" />
-                 <span className="font-bold text-sm text-yellow-100">{tokens.toLocaleString()}</span>
-             </div>
-             <div onClick={() => energy < 5 && addNotification('Попросить помощи в чате?', 'info')} className="bg-black/40 px-3 py-1.5 rounded-full border border-blue-500/30 flex items-center gap-2 cursor-pointer">
-                 <Zap className="text-blue-400 w-4 h-4" />
-                 <span className="font-bold text-sm text-blue-100">{energy}</span>
-             </div>
-         </div>
-      </div>
+      {user.isLoggedIn && (
+          <div className="sticky top-0 z-40 bg-[#020617]/80 backdrop-blur-lg px-4 py-3 border-b border-white/5 flex justify-between items-center shadow-lg shrink-0">
+              <div className="flex items-center gap-4">
+                  <div className="flex flex-col">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Баланс</span>
+                      <div className="flex items-center gap-1.5">
+                          <Coins size={16} className="text-yellow-400" />
+                          <span className="font-tech font-bold text-lg tracking-wide">{tokens.toLocaleString()}</span>
+                      </div>
+                  </div>
+                  <div className="flex flex-col">
+                       <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Энергия</span>
+                       <div className="flex items-center gap-1.5">
+                           <Zap size={16} className="text-blue-400" />
+                           <span className="font-tech font-bold text-lg tracking-wide">{energy}/{MAX_ENERGY}</span>
+                       </div>
+                  </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                  <div className="bg-emerald-900/40 px-3 py-1 rounded-full border border-emerald-500/20 flex items-center gap-2">
+                       <span className="text-xs font-bold text-emerald-400">Lvl {level}</span>
+                       <div className="w-16 h-1.5 bg-black/40 rounded-full overflow-hidden">
+                           <div className="h-full bg-emerald-400" style={{ width: `${(xp % LEVEL_XP_THRESHOLD) / LEVEL_XP_THRESHOLD * 100}%` }}></div>
+                       </div>
+                  </div>
+              </div>
+          </div>
+      )}
 
-      {/* Main Content Area */}
-      <div className="relative z-10 max-w-md mx-auto min-h-[calc(100vh-140px)]">
-         {onboardingStep < 4 && user.isLoggedIn === false && renderOnboarding()} 
-         {/* Fix for onboarding logic: show onboarding if logged in but new? For now just show App content */}
-         
-         {activeTab === 'forest' && renderForest()}
-         {activeTab === 'sponsors' && renderSponsors()}
-         {activeTab === 'real' && renderRealTrees()}
-         {activeTab === 'impact' && renderImpact()}
-         {activeTab === 'profile' && renderProfile()}
-      </div>
+      {/* Main Content Scrollable Area */}
+      {user.isLoggedIn && (
+        <main className="flex-1 overflow-y-auto max-w-md mx-auto w-full animate-fade-in relative z-10 custom-scroll">
+            {activeTab === 'forest' && renderForest()}
+            {activeTab === 'shop' && renderShop()}
+            {activeTab === 'sponsors' && renderSponsors()}
+            {activeTab === 'real' && renderRealTrees()}
+            {activeTab === 'impact' && renderImpact()}
+            {activeTab === 'profile' && renderProfile()}
+        </main>
+      )}
 
-      {/* Notifications Toast */}
-      <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 w-full max-w-xs pointer-events-none">
+      {user.isLoggedIn && renderBottomNav()}
+
+      {/* --- MODALS --- */}
+
+      {/* Edit Profile Modal */}
+      {showEditProfile && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="liquid-card w-full max-w-sm p-6">
+                <h3 className="text-xl font-bold text-white mb-4">Редактировать Профиль</h3>
+                
+                <div className="space-y-4 mb-6">
+                    <div>
+                        <label className="text-xs text-gray-400 mb-1 block">Имя</label>
+                        <input 
+                            value={tempName} 
+                            onChange={(e) => setTempName(e.target.value)}
+                            className="w-full bg-black/20 border border-emerald-500/30 rounded-lg p-3 text-white outline-none focus:border-emerald-500"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-xs text-gray-400 mb-1 block">Уникальный ID</label>
+                        <input 
+                            value={tempHandle} 
+                            onChange={(e) => setTempHandle(e.target.value)}
+                            className="w-full bg-black/20 border border-emerald-500/30 rounded-lg p-3 text-white outline-none focus:border-emerald-500"
+                        />
+                    </div>
+                    <div>
+                         <label className="text-xs text-gray-400 mb-2 block">Аватар</label>
+                         <div className="flex gap-2 justify-between">
+                             {['🤖', '🦸', '🧚', '🦊', '🐯'].map(emo => (
+                                 <button 
+                                    key={emo} 
+                                    onClick={() => setTempAvatar(emo)}
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center text-xl bg-white/5 border ${tempAvatar === emo ? 'border-emerald-500 bg-emerald-500/20' : 'border-transparent'}`}
+                                 >
+                                     {emo}
+                                 </button>
+                             ))}
+                         </div>
+                    </div>
+                </div>
+
+                <div className="flex gap-3">
+                    <button onClick={() => setShowEditProfile(false)} className="flex-1 py-3 rounded-xl bg-white/5 text-gray-400">Отмена</button>
+                    <button onClick={saveProfile} className="flex-1 liquid-button rounded-xl text-white font-bold">Сохранить</button>
+                </div>
+            </div>
+        </div>
+      )}
+      
+      {/* Planting Modal - Seed Selection */}
+      {plantingPlotId && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in slide-in-from-bottom-10">
+              <div className="liquid-card w-full max-w-sm max-h-[80vh] overflow-y-auto custom-scroll p-4">
+                  <div className="flex justify-between items-center mb-4">
+                      <h3 className="font-bold text-xl text-white">Выберите семя</h3>
+                      <button onClick={() => setPlantingPlotId(null)} className="p-2 bg-white/5 rounded-full"><X size={20}/></button>
+                  </div>
+                  <div className="grid grid-cols-1 gap-3">
+                      {(Object.entries(TREE_STATS) as [TreeType, any][]).filter(([k]) => !k.startsWith('brand')).map(([key, stat]) => (
+                          <button 
+                             key={key}
+                             onClick={() => handlePlant(key, plantingPlotId)}
+                             disabled={tokens < stat.cost}
+                             className={`p-3 rounded-xl border flex items-center justify-between transition-all ${tokens >= stat.cost ? 'bg-emerald-900/20 border-emerald-500/30 hover:bg-emerald-900/40' : 'bg-gray-800/50 border-gray-700 opacity-50'}`}
+                          >
+                              <div className="flex items-center gap-3">
+                                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center bg-black/30 ${stat.color}`}>
+                                      <stat.icon size={20} />
+                                  </div>
+                                  <div className="text-left">
+                                      <div className="font-bold text-sm text-white">{stat.name}</div>
+                                      <div className="text-xs text-emerald-400">+{stat.income} NUN/день</div>
+                                  </div>
+                              </div>
+                              <div className="font-bold text-sm">{stat.cost} T</div>
+                          </button>
+                      ))}
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* Selected Plot Actions Modal */}
+      {selectedPlot && selectedPlot.tree && TREE_STATS[selectedPlot.tree.type] && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center p-4">
+          <div className="liquid-card w-full max-w-sm p-6 animate-slide-up">
+             <div className="flex justify-between items-start mb-6">
+                <div className="flex items-center gap-4">
+                    <div className={`w-14 h-14 rounded-2xl bg-black/30 flex items-center justify-center ${TREE_STATS[selectedPlot.tree.type].color}`}>
+                        {React.createElement(TREE_STATS[selectedPlot.tree.type].icon, { size: 32 })}
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-bold text-white">{TREE_STATS[selectedPlot.tree.type].name}</h3>
+                        <div className="flex items-center gap-2 text-sm text-gray-400">
+                             <span>Lvl {selectedPlot.tree.level}</span>
+                             <span className="w-1 h-1 bg-gray-500 rounded-full"></span>
+                             <span>{selectedPlot.tree.xp}/100 XP</span>
+                        </div>
+                    </div>
+                </div>
+                <button onClick={() => setSelectedPlot(null)} className="p-2 bg-white/5 rounded-full hover:bg-white/10"><X size={20} /></button>
+             </div>
+
+             <div className="grid grid-cols-2 gap-3">
+                 {[
+                     { id: 'water', label: 'Полить', icon: Droplets, color: 'text-blue-400', bg: 'bg-blue-500/20' },
+                     { id: 'fertilize', label: 'Удобрить', icon: Sparkles, color: 'text-yellow-400', bg: 'bg-yellow-500/20' },
+                     { id: 'prune', label: 'Обрезать', icon: ScissorsIcon, color: 'text-orange-400', bg: 'bg-orange-500/20' },
+                     { id: 'protect', label: 'Защитить', icon: Shield, color: 'text-green-400', bg: 'bg-green-500/20' },
+                 ].map(action => (
+                     <button 
+                        key={action.id}
+                        onClick={() => handleCare(action.id as any)}
+                        className={`liquid-button p-4 rounded-xl flex flex-col items-center justify-center gap-2 active:scale-95`}
+                     >
+                         <action.icon className={action.color} size={24} />
+                         <span className="font-bold text-sm text-gray-200">{action.label}</span>
+                         <span className="text-[10px] text-gray-500">-1 Энергии</span>
+                     </button>
+                 ))}
+             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Real Tree Passport Modal */}
+      {viewingRealTree && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+              <div className="liquid-card w-full max-w-sm max-h-[90vh] overflow-y-auto custom-scroll p-0 relative">
+                  <div className="h-40 bg-emerald-900/50 relative">
+                       <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb7d5c73?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover opacity-60 mix-blend-overlay" />
+                       <div className="absolute inset-0 bg-gradient-to-t from-[#022c22] to-transparent"></div>
+                       <button onClick={() => setViewingRealTree(null)} className="absolute top-4 right-4 p-2 bg-black/50 rounded-full text-white"><X size={20}/></button>
+                  </div>
+                  
+                  <div className="p-6 -mt-10 relative z-10">
+                      <h2 className="text-2xl font-bold text-white mb-1">{viewingRealTree.customName}</h2>
+                      <div className="flex items-center gap-2 text-emerald-400 text-sm mb-6">
+                          <MapPin size={14} />
+                          <span className="font-mono">{viewingRealTree.gps}</span>
+                      </div>
+
+                      <div className="space-y-6">
+                          <div>
+                              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Хронология Жизни</h3>
+                              <div className="space-y-4 pl-4 border-l border-emerald-500/30 ml-2">
+                                  {viewingRealTree.history.map((item, i) => (
+                                      <div key={i} className="relative pl-6">
+                                          <div className="absolute -left-[21px] top-0 w-4 h-4 rounded-full bg-emerald-500 border-4 border-[#020617] flex items-center justify-center">
+                                              {/* Icon */}
+                                          </div>
+                                          <div className="text-xs text-gray-400 mb-1">{item.date}</div>
+                                          <h4 className="font-bold text-white text-sm">{item.title}</h4>
+                                          <p className="text-xs text-gray-500">{item.desc}</p>
+                                      </div>
+                                  ))}
+                              </div>
+                          </div>
+                          
+                          <div className="p-4 bg-emerald-900/20 rounded-xl border border-emerald-500/20">
+                              <h3 className="text-xs font-bold text-emerald-400 mb-2">Команда Nuncycle</h3>
+                              <p className="text-xs text-gray-400 italic">"Мы регулярно посещаем питомник. Следующий отчет через 14 дней."</p>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* Daily Tasks Modal */}
+      {showTasks && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+              <div className="liquid-card w-full max-w-sm p-6">
+                  <div className="flex justify-between items-center mb-6">
+                      <h3 className="font-bold text-xl text-white">Ежедневные задания</h3>
+                      <button onClick={() => setShowTasks(false)} className="p-2 bg-white/5 rounded-full"><X size={20}/></button>
+                  </div>
+                  <div className="space-y-3">
+                      {dailyTasks.map(task => (
+                          <div key={task.id} className="bg-black/20 p-3 rounded-xl border border-white/5">
+                              <div className="flex justify-between items-center mb-2">
+                                  <span className="text-sm text-gray-200">{task.text}</span>
+                                  <span className="text-xs font-bold text-yellow-400">+{task.reward} T</span>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                  <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
+                                      <div className="h-full bg-emerald-500" style={{ width: `${Math.min(100, (task.current / task.max) * 100)}%` }}></div>
+                                  </div>
+                                  <span className="text-xs text-gray-400">{task.current}/{task.max}</span>
+                              </div>
+                              {task.current >= task.max && !task.completed && (
+                                  <button className="mt-2 w-full py-2 bg-yellow-500/20 text-yellow-400 text-xs font-bold rounded-lg border border-yellow-500/30">Забрать</button>
+                              )}
+                          </div>
+                      ))}
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* Referral Modal */}
+      {showReferral && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+              <div className="liquid-card w-full max-w-sm p-6 text-center">
+                   <div className="w-16 h-16 bg-emerald-500/20 rounded-full mx-auto flex items-center justify-center mb-4">
+                       <Users className="text-emerald-400 w-8 h-8" />
+                   </div>
+                   <h3 className="text-xl font-bold text-white mb-2">Пригласите друга</h3>
+                   <p className="text-sm text-gray-400 mb-6">Получите 1000 NUN за каждого друга!</p>
+                   
+                   <div className="bg-black/30 p-4 rounded-xl border border-white/10 flex items-center justify-between mb-4">
+                       <code className="text-emerald-400 font-bold tracking-widest">{user.referralCode}</code>
+                       <button onClick={() => addNotification('Код скопирован!', 'success')}><Copy size={16} className="text-gray-400"/></button>
+                   </div>
+                   <button onClick={() => setShowReferral(false)} className="liquid-button w-full py-3 rounded-xl text-white font-bold">Закрыть</button>
+              </div>
+          </div>
+      )}
+
+      {/* Social Share Modal */}
+      {showSocialShare && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+              <div className="liquid-card w-full max-w-sm p-6">
+                  <h3 className="text-xl font-bold text-white mb-4 text-center">Поделиться</h3>
+                  <div className="grid grid-cols-4 gap-4 mb-6">
+                      <button onClick={() => setShowStoryGen(true)} className="flex flex-col items-center gap-2">
+                          <div className="w-12 h-12 bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 rounded-xl flex items-center justify-center text-white"><Instagram/></div>
+                          <span className="text-[10px] text-gray-400">Stories</span>
+                      </button>
+                      <button className="flex flex-col items-center gap-2">
+                          <div className="w-12 h-12 bg-blue-400 rounded-xl flex items-center justify-center text-white"><Twitter/></div>
+                          <span className="text-[10px] text-gray-400">Twitter</span>
+                      </button>
+                      <button className="flex flex-col items-center gap-2">
+                          <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white"><Facebook/></div>
+                          <span className="text-[10px] text-gray-400">Facebook</span>
+                      </button>
+                      <button className="flex flex-col items-center gap-2">
+                          <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center text-white"><Send/></div>
+                          <span className="text-[10px] text-gray-400">Telegram</span>
+                      </button>
+                  </div>
+                  <button onClick={() => setShowSocialShare(false)} className="w-full py-3 bg-white/10 rounded-xl text-white text-sm">Отмена</button>
+              </div>
+          </div>
+      )}
+
+      {/* Chat Modal */}
+      {showChat && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+              <div className="liquid-card w-full max-w-sm h-[80vh] flex flex-col p-0 overflow-hidden">
+                  <div className="p-4 border-b border-white/5 flex justify-between items-center bg-black/20">
+                      <div className="font-bold text-white">Чат Лесников</div>
+                      <button onClick={() => setShowChat(false)}><X size={20} className="text-gray-400"/></button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scroll">
+                      {messages.map(msg => (
+                          <div key={msg.id} className={`flex ${msg.senderId === 'me' ? 'justify-end' : 'justify-start'}`}>
+                              <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${msg.senderId === 'me' ? 'bg-emerald-600/30 text-white rounded-tr-sm border border-emerald-500/20' : 'bg-gray-800/50 text-gray-200 rounded-tl-sm'}`}>
+                                  {msg.text}
+                              </div>
+                          </div>
+                      ))}
+                  </div>
+                  <div className="p-3 bg-black/20 border-t border-white/5 flex gap-2">
+                      <input 
+                          value={chatInput} 
+                          onChange={(e) => setChatInput(e.target.value)}
+                          placeholder="Сообщение..." 
+                          className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-emerald-500/50"
+                      />
+                      <button onClick={handleSendMessage} className="p-2 bg-emerald-500/20 text-emerald-400 rounded-xl border border-emerald-500/30"><Send size={20}/></button>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* TON Connect Modal */}
+      {showTonConnect && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+              <div className="liquid-card w-full max-w-sm p-6 text-center">
+                  <h3 className="text-xl font-bold text-white mb-6">Подключение TON</h3>
+                  <div className="w-48 h-48 bg-white mx-auto rounded-xl flex items-center justify-center mb-6">
+                      <QrCode size={120} className="text-black"/>
+                  </div>
+                  <p className="text-sm text-gray-400 mb-6">Сканируйте QR-код через Tonkeeper или выберите кошелек ниже.</p>
+                  <button onClick={handleTonConnect} className="liquid-button w-full py-3 rounded-xl text-white font-bold mb-3">
+                      Tonkeeper
+                  </button>
+                  <button onClick={() => setShowTonConnect(false)} className="text-sm text-gray-500">Отмена</button>
+              </div>
+          </div>
+      )}
+      
+      {/* Story Generator Modal (Instagram) */}
+      {showStoryGen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-xl p-4">
+              <div className="w-full max-w-[300px] aspect-[9/16] bg-gradient-to-b from-[#022c22] to-black relative rounded-2xl border border-emerald-500/30 overflow-hidden flex flex-col items-center justify-center text-center p-6 shadow-[0_0_50px_rgba(16,185,129,0.2)]">
+                   <div className="absolute top-0 left-0 right-0 h-1/2 bg-emerald-500/10 blur-[50px]"></div>
+                   <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 font-tech mb-2">NUNCYCLE</h2>
+                   <div className="text-6xl mb-4">{user.avatar}</div>
+                   <div className="text-2xl font-bold text-white mb-1">{user.name}</div>
+                   <div className="text-emerald-400 font-mono mb-6">Lvl {level} Guardian</div>
+                   
+                   <div className="bg-white/10 p-4 rounded-xl backdrop-blur-md border border-white/10 w-full mb-6">
+                       <div className="text-gray-400 text-xs uppercase">Мой Вклад</div>
+                       <div className="text-2xl font-bold text-white">125 кг CO₂</div>
+                   </div>
+                   
+                   <div className="text-sm text-gray-400">Присоединяйся ко мне!</div>
+                   <div className="text-xs text-emerald-500 mt-1 font-mono">CODE: {user.referralCode}</div>
+
+                   <button onClick={() => { addNotification('История опубликована!', 'success'); setShowStoryGen(false); setShowSocialShare(false); }} className="mt-8 px-6 py-2 bg-blue-500 rounded-full text-white font-bold text-sm shadow-lg">
+                       Поделиться в Story
+                   </button>
+                   
+                   <button onClick={() => setShowStoryGen(false)} className="absolute top-4 right-4 text-white/50"><X size={24}/></button>
+              </div>
+          </div>
+      )}
+
+      {/* Notifications Toast Container */}
+      <div className="fixed top-4 left-0 right-0 z-[60] flex flex-col items-center gap-2 pointer-events-none px-4">
           {notifications.map(n => (
-              <div key={n.id} className="bg-black/80 backdrop-blur-md text-white px-4 py-3 rounded-xl shadow-lg border-l-4 border-emerald-500 animate-in fade-in slide-in-from-top-4 flex items-center gap-3">
-                  {n.type === 'success' ? <CheckCircle2 className="text-emerald-500" size={20}/> : <Activity className="text-blue-500" size={20}/>}
-                  <span className="text-sm font-medium">{n.text}</span>
+              <div key={n.id} className={`liquid-card px-4 py-3 rounded-xl flex items-center gap-3 shadow-xl animate-in fade-in slide-in-from-top-5 max-w-sm w-full backdrop-blur-xl ${n.type === 'success' ? 'border-emerald-500/50 bg-emerald-900/80' : 'border-blue-500/50 bg-blue-900/80'}`}>
+                  {n.type === 'success' ? <CheckCircle2 className="text-emerald-400 shrink-0" size={20}/> : <Info className="text-blue-400 shrink-0" size={20}/>}
+                  <span className="text-sm font-bold text-white">{n.text}</span>
               </div>
           ))}
       </div>
-
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#020617]/90 backdrop-blur-xl border-t border-white/10 pb-safe">
-        <div className="flex justify-around items-center p-2 max-w-md mx-auto">
-          <button 
-            onClick={() => { setActiveTab('forest'); setVisitMode(null); }} 
-            className={`flex flex-col items-center gap-1 p-2 rounded-2xl transition-all duration-300 w-16 ${activeTab === 'forest' ? 'text-emerald-400 bg-emerald-500/10' : 'text-gray-500'}`}
-          >
-            <TreeDeciduous size={24} strokeWidth={activeTab === 'forest' ? 2.5 : 2} />
-            <span className="text-[10px] font-bold">Лес</span>
-          </button>
-          
-          <button 
-            onClick={() => setActiveTab('sponsors')} 
-            className={`flex flex-col items-center gap-1 p-2 rounded-2xl transition-all duration-300 w-16 ${activeTab === 'sponsors' ? 'text-purple-400 bg-purple-500/10' : 'text-gray-500'}`}
-          >
-            <Handshake size={24} strokeWidth={activeTab === 'sponsors' ? 2.5 : 2} />
-            <span className="text-[10px] font-bold">Спонсоры</span>
-          </button>
-
-          <button 
-            onClick={() => setActiveTab('real')} 
-            className={`flex flex-col items-center gap-1 p-2 rounded-2xl transition-all duration-300 w-16 ${activeTab === 'real' ? 'text-yellow-400 bg-yellow-500/10' : 'text-gray-500'}`}
-          >
-            <div className={`relative ${activeTab === 'real' ? 'scale-110' : ''}`}>
-                <div className="absolute -inset-2 bg-yellow-500/20 blur-lg rounded-full"></div>
-                <Globe size={24} className="relative z-10" strokeWidth={activeTab === 'real' ? 2.5 : 2} />
-            </div>
-            <span className="text-[10px] font-bold mt-1">Real</span>
-          </button>
-
-          <button 
-            onClick={() => setActiveTab('impact')} 
-            className={`flex flex-col items-center gap-1 p-2 rounded-2xl transition-all duration-300 w-16 ${activeTab === 'impact' ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-500'}`}
-          >
-            <Activity size={24} strokeWidth={activeTab === 'impact' ? 2.5 : 2} />
-            <span className="text-[10px] font-bold">Вклад</span>
-          </button>
-
-          <button 
-            onClick={() => setActiveTab('profile')} 
-            className={`flex flex-col items-center gap-1 p-2 rounded-2xl transition-all duration-300 w-16 ${activeTab === 'profile' ? 'text-blue-400 bg-blue-500/10' : 'text-gray-500'}`}
-          >
-            <User size={24} strokeWidth={activeTab === 'profile' ? 2.5 : 2} />
-            <span className="text-[10px] font-bold">Профиль</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Render All Modals */}
-      {renderModals()}
 
     </div>
   );
